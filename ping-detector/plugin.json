@@ -1,0 +1,25 @@
+{
+    "name":"Ping Detector",
+    "id":"ping-detector",
+    "version":"1.0.0",
+    "startFile":"index.ts",
+    "supportedVersions":["OTv4.0.x","OTv4.1.x"],
+
+    "enabled":true,
+    "priority":0,
+    "events":[],
+
+    "npmDependencies":[],
+    "requiredPlugins":[],
+    "incompatiblePlugins":[],
+
+    "details":{
+        "author":"",
+        "contributors":[],
+        "shortDescription":"Times out users who ping staff, with escalating weekly penalties",
+        "longDescription":"Detects when a user pings someone with a configured staff role. Issues a 20-second timeout on the first offense and multiplies the duration for every subsequent ping within the same week.",
+        "imageUrl":"",
+        "projectUrl":"",
+        "tags":["moderation","ping","timeout","staff"]
+    }
+}

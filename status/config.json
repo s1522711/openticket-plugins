@@ -1,0 +1,22 @@
+{
+    "channelId": "1487437666701148210",
+    "messageId": "1487437739820318782",
+    "games": [
+        {
+            "name": "GTA",
+            "status": "up"
+        },
+        {
+            "name": "RDR2",
+            "status": "up"
+        },
+        {
+            "name": "CS2",
+            "status": "up"
+        },
+        {
+            "name": "OVIX API",
+            "status": "updating"
+        }
+    ]
+}

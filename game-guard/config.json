@@ -1,0 +1,23 @@
+{
+    "availableGames": [
+        "GTA",
+        "RDR2",
+        "CS2"
+    ],
+    "disabledGames": [],
+    "checkedTickets": [
+        "account-issues",
+        "crashing",
+        "injection-issues",
+        "other-issues"
+    ],
+    "ticketCode": {
+        "enabled": true,
+        "channelId": "1487434524852883626",
+        "messageId": "1487434591089328160",
+        "currentCode": "6642",
+        "lastCode": "5172",
+        "randomization": true,
+        "customCode": "0000"
+    }
+}

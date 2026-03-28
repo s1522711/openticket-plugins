@@ -1,0 +1,25 @@
+{
+    "name":"Game Guard",
+    "id":"game-guard",
+    "version":"1.0.0",
+    "startFile":"index.ts",
+    "supportedVersions":["OTv4.0.x","OTv4.1.x"],
+
+    "enabled":true,
+    "priority":0,
+    "events":[],
+
+    "npmDependencies":[],
+    "requiredPlugins":[],
+    "incompatiblePlugins":[],
+
+    "details":{
+        "author":"",
+        "contributors":[],
+        "shortDescription":"Prevents ticket creation for disabled games",
+        "longDescription":"Intercepts ticket creation when the game-name answer matches a disabled game. Includes a /game-guard admin command to enable or disable individual games.",
+        "imageUrl":"",
+        "projectUrl":"",
+        "tags":["game","guard","ticket"]
+    }
+}
