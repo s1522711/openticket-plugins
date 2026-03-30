@@ -1,6 +1,6 @@
 {
-    "channelId": "1487437666701148210",
-    "messageId": "1487437739820318782",
+    "channelId": "1462545489915281639",
+    "messageId": "1487906968676073692",
     "games": [
         {
             "name": "GTA",
@@ -16,7 +16,7 @@
         },
         {
             "name": "OVIX API",
-            "status": "updating"
+            "status": "up"
         }
     ]
 }

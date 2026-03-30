@@ -14,7 +14,7 @@
     "incompatiblePlugins":[],
 
     "details":{
-        "author":"",
+        "author":"Germani",
         "contributors":[],
         "shortDescription":"Live game status board with game-guard ticket availability",
         "longDescription":"Displays a live embed showing ticket availability from game-guard and custom per-game server statuses (up/updating/down). Managed via /status commands.",

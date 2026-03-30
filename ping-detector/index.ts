@@ -13,6 +13,7 @@ const WEEK_MS     = 7 * 24 * 60 * 60 * 1000
 interface PingDetectorConfig {
     staffRoles:         string[]
     baseTimeoutSeconds: number
+    logChannelId:       string
 }
 
 interface UserPingRecord {
@@ -27,7 +28,7 @@ interface PingData {
 // ─── Config / data helpers ────────────────────────────────────────────────────
 function loadConfig(): PingDetectorConfig {
     try { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8")) }
-    catch { return { staffRoles: [], baseTimeoutSeconds: 20 } }
+    catch { return { staffRoles: [], baseTimeoutSeconds: 20, logChannelId: "" } }
 }
 
 function saveConfig(cfg: PingDetectorConfig): void {
@@ -50,6 +51,13 @@ function saveData(data: PingData): void {
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 4), "utf-8")
 }
 
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function ordinal(n: number): string {
+    const s = ["th", "st", "nd", "rd"]
+    const v = n % 100
+    return n + (s[(v - 20) % 10] ?? s[v] ?? s[0])
+}
+
 // ─── Core handler ─────────────────────────────────────────────────────────────
 async function handleMessage(message: discord.Message): Promise<void> {
     if (message.author.bot) return
@@ -69,11 +77,13 @@ async function handleMessage(message: discord.Message): Promise<void> {
     const senderIsDiscordAdmin = message.member.permissions.has(discord.PermissionFlagsBits.Administrator)
     if (senderIsAdmin || senderIsStaff || senderIsDiscordAdmin) return
 
-    // Count how many distinct staff members were pinged
+    // Count how many distinct staff members were pinged (exclude reply mentions)
+    const repliedUserId = message.mentions.repliedUser?.id ?? null
     let staffPingCount = 0
     for (const [userId, user] of message.mentions.users) {
         if (user.bot) continue
         if (userId === message.author.id) continue
+        if (userId === repliedUserId) continue
         const mentioned = await message.guild.members.fetch(userId).catch(() => null)
         if (!mentioned) continue
         if (staffRoles.some(roleId => mentioned.roles.cache.has(roleId))) {
@@ -129,6 +139,25 @@ async function handleMessage(message: discord.Message): Promise<void> {
         `Ping Detector: ${message.author.username} timed out for ${timeoutMs / 1000}s (${staffPingCount} staff pinged, total count: ${count})`,
         "plugin"
     )
+
+    // ── Log message ───────────────────────────────────────────────────────────
+    if (cfg.logChannelId) {
+        try {
+            const guild = message.guild
+            const logChannel = await guild.channels.fetch(cfg.logChannelId).catch(() => null)
+            if (logChannel?.isTextBased()) {
+                const multiplierTs = Math.floor(expiresAt / 1000)
+                const timeoutTs    = Math.floor((now + timeoutMs) / 1000)
+                await (logChannel as discord.TextChannel).send(
+                    `${message.author} pinged staff in ${message.channel}, this is their ${ordinal(count)} ping this week. ` +
+                    `Their multiplier expires on <t:${multiplierTs}:F>. ` +
+                    `The user's timeout expires <t:${timeoutTs}:R>.`
+                )
+            }
+        } catch (err) {
+            opendiscord.log(`Ping Detector: Failed to send log message — ${err}`, "error")
+        }
+    }
 }
 
 // ─── /ping-detector slash command ────────────────────────────────────────────
@@ -138,6 +167,7 @@ opendiscord.events.get("onSlashCommandLoad").listen((slashCommands) => {
 
     const role = discord.ApplicationCommandOptionType.Role
     const user = discord.ApplicationCommandOptionType.User
+    const chan = discord.ApplicationCommandOptionType.Channel
     const sub  = discord.ApplicationCommandOptionType.Subcommand
 
     slashCommands.add(new api.ODSlashCommand("ping-detector:manage", {
@@ -174,6 +204,16 @@ opendiscord.events.get("onSlashCommandLoad").listen((slashCommands) => {
                 description: "Reset a user's ping count",
                 options: [{ name: "user", type: user, required: true,
                     description: "The user to reset" }]
+            },
+            {
+                name: "log-channel", type: sub,
+                description: "Set the channel where ping alerts are logged",
+                options: [{ name: "channel", type: chan, required: true,
+                    description: "The text channel to log pings in" }]
+            },
+            {
+                name: "db", type: sub,
+                description: "Export all active weekly multipliers as a CSV file"
             }
         ]
     }))
@@ -275,6 +315,42 @@ opendiscord.events.get("onCommandResponderLoad").listen((commandResponders) => {
                 opendiscord.log(`Ping Detector: Record reset for ${target.username} by ${user.username}`, "plugin")
                 await instance.reply({ id: new api.ODId("ping-detector:reset-ok"), ephemeral: true,
                     message: { content: `✅ Ping record for ${target} has been reset.` } })
+
+            } else if (subcommand === "log-channel") {
+                const channelOption = raw.options.getChannel("channel", true)
+                if (channelOption.type !== discord.ChannelType.GuildText && channelOption.type !== discord.ChannelType.GuildAnnouncement) {
+                    await instance.reply({ id: new api.ODId("ping-detector:log-channel-bad"), ephemeral: true,
+                        message: { content: "❌ Please select a **text channel**." } })
+                    return cancel()
+                }
+                cfg.logChannelId = channelOption.id
+                saveConfig(cfg)
+                opendiscord.log(`Ping Detector: Log channel set to #${channelOption.name} by ${user.username}`, "plugin")
+                await instance.reply({ id: new api.ODId("ping-detector:log-channel-set"), ephemeral: true,
+                    message: { content: `✅ Ping alerts will be logged in <#${channelOption.id}>.` } })
+
+            } else if (subcommand === "db") {
+                const data = loadData()
+                const entries = Object.entries(data)
+                if (entries.length === 0) {
+                    await instance.reply({ id: new api.ODId("ping-detector:db-empty"), ephemeral: true,
+                        message: { content: "No active multipliers this week." } })
+                    return cancel()
+                }
+                const rows = [
+                    "user_id,ping_count,multiplier_expires_utc",
+                    ...entries.map(([userId, record]) => {
+                        const expires = new Date(record.expiresAt).toISOString()
+                        return `${userId},${record.count},${expires}`
+                    })
+                ]
+                const csv = rows.join("\n")
+                await instance.reply({ id: new api.ODId("ping-detector:db"), ephemeral: false,
+                    message: {
+                        content: `${entries.length} active multiplier(s):`,
+                        files: [{ attachment: Buffer.from(csv, "utf-8"), name: "multipliers.csv" }]
+                    }
+                })
             }
         })
     )

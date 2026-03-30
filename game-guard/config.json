@@ -13,11 +13,11 @@
     ],
     "ticketCode": {
         "enabled": true,
-        "channelId": "1487434524852883626",
-        "messageId": "1487434591089328160",
-        "currentCode": "6642",
-        "lastCode": "5172",
+        "channelId": "1462545548270899212",
+        "messageId": "1487907077316677812",
+        "currentCode": "2545",
+        "lastCode": "8734",
         "randomization": true,
-        "customCode": "0000"
+        "customCode": "7284"
     }
 }

@@ -14,7 +14,7 @@
     "incompatiblePlugins":[],
 
     "details":{
-        "author":"",
+        "author":"Germani",
         "contributors":[],
         "shortDescription":"Times out users who ping staff, with escalating weekly penalties",
         "longDescription":"Detects when a user pings someone with a configured staff role. Issues a 20-second timeout on the first offense and multiplies the duration for every subsequent ping within the same week.",

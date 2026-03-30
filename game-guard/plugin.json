@@ -14,7 +14,7 @@
     "incompatiblePlugins":[],
 
     "details":{
-        "author":"",
+        "author":"Germani",
         "contributors":[],
         "shortDescription":"Prevents ticket creation for disabled games",
         "longDescription":"Intercepts ticket creation when the game-name answer matches a disabled game. Includes a /game-guard admin command to enable or disable individual games.",
