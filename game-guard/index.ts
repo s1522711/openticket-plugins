@@ -381,7 +381,7 @@ opendiscord.events.get("onCommandResponderLoad").listen((commandResponders) => {
                 saveConfig(cfg)
                 await opendiscord.events.get("game-guard:onGameStatusChange")!.emit([])
                 opendiscord.log(`Game Guard: "${game}" disabled by ${user.username}`, "plugin")
-                await instance.reply({ id: new api.ODId("game-guard:disabled-ok"), ephemeral: true,
+                await instance.reply({ id: new api.ODId("game-guard:disabled-ok"), ephemeral: false,
                     message: { content: `✅ **${game}** is now **disabled**. Players cannot open tickets for this game.` } })
 
             } else if (subcommand === "enable") {
@@ -396,7 +396,7 @@ opendiscord.events.get("onCommandResponderLoad").listen((commandResponders) => {
                 saveConfig(cfg)
                 await opendiscord.events.get("game-guard:onGameStatusChange")!.emit([])
                 opendiscord.log(`Game Guard: "${game}" enabled by ${user.username}`, "plugin")
-                await instance.reply({ id: new api.ODId("game-guard:enabled-ok"), ephemeral: true,
+                await instance.reply({ id: new api.ODId("game-guard:enabled-ok"), ephemeral: false,
                     message: { content: `✅ **${game}** is now **enabled**. Players can open tickets for this game again.` } })
 
             } else if (subcommand === "list") {
